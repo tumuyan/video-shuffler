@@ -21,6 +21,14 @@ def sec2TimeStr(sec):
 
 class Clip:
     def __init__(self, name, time_threshold, start_pos, end_pos):
+        """存储一个剪辑片段
+
+        Args:
+            name (str): 片段名称
+            time_threshold (int): 时间阈值;两个相邻字幕之间的间隔时间如果超过阈值，则进行裁剪.
+            start_pos (int): start在字幕中是第几个位置
+            end_pos (int): end在字幕中是第几个位置
+        """
         self.name = name
         self.time_threshold = time_threshold
         self.start_pos = start_pos
@@ -29,6 +37,15 @@ class Clip:
         self.start = -1
 
     def add(self, data, comment, start, end, name):
+        """为片段添加一行字幕
+
+        Args:
+            data (list): 已经用`,`切分为数组的一行字幕内容
+            comment (bool): 是否为注释
+            start (int): 字幕的开始时间
+            end (int): 字幕的结束时间
+            name (str): 说话人
+        """
         self.data.append(data)
         if not comment:
             self.end = end
@@ -38,9 +55,9 @@ class Clip:
     def hasData(self):
         return len(self.data) > 0
 
-    def getAss(self, abs_time):
+    def getAss(self, raw_time):
         text = ""
-        if abs_time:
+        if raw_time:
             for item in self.data:
                 text = text + ",".join(item)
         else:
@@ -54,22 +71,20 @@ class Clip:
 
         return text
 
-    def getContent(self):
+    def getSummary(self):
         return sec2TimeStr(self.start) + "\t" + self.name + "\n"
-
-
-# def AssEvent:
-#     def __init__(self,line, Layer, Start, End, Style, Name, Text):
-#         self.line = line
-#         self.
-
-# path 待处理的文件
-# remove_comment 是否删除comment。0 不删除 1 保留章节信息 2 不保留
-# time_threshold 时间阈值。两个相邻字幕之间的间隔时间如果超过阈值，则进行裁剪
 
 
 class Ass:
     def __init__(self, ass_path, video_path="", remove_comment=1, time_threshold=10):
+        """解析ASS字幕文件
+
+        Args:
+            ass_path (str): 字幕文件的路径
+            video_path (str, optional): 视频文件的路径. Defaults to "".
+            remove_comment (int, optional): 是否删除comment; 0 不删除 1 保留章节信息 2 不保留. Defaults to 1.
+            time_threshold (int, optional): 时间阈值;两个相邻字幕之间的间隔时间如果超过阈值，则进行裁剪. Defaults to 10.
+        """
         self.ass_path = ass_path
         self.video_path = video_path
 
@@ -166,8 +181,14 @@ class Ass:
         if clip.hasData():
             self.clips.append(clip)
 
-    # 默认只切分字幕，不切分视频
-    def split(self, name="", abs_time=False, cut_video=False):
+    def split(self, name="", raw_time=False, cut_video=False):
+        """切分字幕和视频
+
+        Args:
+            name (str, optional): 切分后文件名的前缀. Defaults to "".
+            raw_time (bool, optional): 使用原视频文件的时间戳. Defaults to False.
+            cut_video (bool, optional): 是否切分视频. Defaults to False.
+        """
         # dir = os.path.abspath(os.path.join(os.path.dirname(self.path),os.path.pardir))
         dir = os.path.abspath(os.path.join(os.path.dirname(self.ass_path)))
         if len(name) > 0:
@@ -186,7 +207,8 @@ class Ass:
             content_file.write(clip.getContent())
             file = open(path, 'w', encoding='UTF-8')
             file.write(self.head)
-            file.write(clip.getAss(abs_time))
+            file.write(clip.getAss(raw_time))
             file.close()
 
         content_file.close()
+
