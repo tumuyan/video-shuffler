@@ -39,20 +39,24 @@ class Clip:
         return len(self.data) > 0
 
     def getAss(self, abs_time):
-        content = ""
+        text = ""
         if abs_time:
             for item in self.data:
-                content = content + ",".join(item)
+                text = text + ",".join(item)
         else:
             for item in self.data:
-                it = item
+                it = item.copy()
                 it[self.start_pos] = sec2TimeStr(
                     timeStr2Sec(it[self.start_pos]) - self.start)
                 it[self.end_pos] = sec2TimeStr(
                     timeStr2Sec(it[self.end_pos]) - self.start)
-                content = content + ",".join(it)
+                text = text + ",".join(it)
 
-        return content
+        return text
+
+    def getContent(self):
+        return sec2TimeStr(self.start) + "\t" + self.name + "\n"
+
 
 # def AssEvent:
 #     def __init__(self,line, Layer, Start, End, Style, Name, Text):
@@ -111,7 +115,7 @@ class Ass:
                             self.clips.append(clip)
                             chapter_ += 1
                             chapter_name = str(
-                                chapter) + "." + str(chapter_) + text[2:].strip()
+                                chapter) + "." + str(chapter_) + " " + text[2:].strip()
                             clip = None
                             content = ""
 
@@ -120,7 +124,7 @@ class Ass:
                             chapter += 1
                             chapter_ = 1
                             chapter_name = str(
-                                chapter) + "." + str(chapter_) + text[1:].strip()
+                                chapter) + "." + str(chapter_) + " " + text[1:].strip()
                             clip = None
                             content = ""
                         elif remove_comment > 0:
@@ -172,18 +176,17 @@ class Ass:
         if len(self.video_path) < 5:
             cut_video = False
 
-        txt_path = dir + "/" + name + "_filelist.txt"
-        print("filelist: ", txt_path)
-        txt_file = open(txt_path, 'w', encoding='UTF-8')
+        content_path = dir + "/" + name + " content.txt"
+        print("content file: ", content_path)
+        content_file = open(content_path, 'w', encoding='UTF-8')
 
         for clip in self.clips:
             path = dir + "/" + name + clip.name + ".ass"
             print(path)
-            txt_file.write(path)
-            txt_file.write("\n")
+            content_file.write(clip.getContent())
             file = open(path, 'w', encoding='UTF-8')
             file.write(self.head)
             file.write(clip.getAss(abs_time))
             file.close()
 
-        txt_file.close()
+        content_file.close()
