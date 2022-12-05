@@ -19,7 +19,7 @@ def sec2TimeStr(sec):
     return "{}:{}:{:.2f}".format(h, m, s)
 
 
-class Clip:
+class Chapter:
     def __init__(self, name, time_threshold, start_pos, end_pos):
         """存储一个剪辑片段
 
@@ -35,6 +35,10 @@ class Clip:
         self.end_pos = end_pos
         self.data = []
         self.start = -1
+        self.clips = []
+        self.clip_start = -1
+        self.clip_end = -1
+        # self.clip_end = -1
 
     def add(self, data, comment, start, end, name):
         """为片段添加一行字幕
@@ -48,9 +52,17 @@ class Clip:
         """
         self.data.append(data)
         if not comment:
-            self.end = end
-            if self.start < 0:
-                self.start = start
+            if self.clip_start < 0:
+                self.clip_start = start
+                if self.start < 0:
+                    self.start = start
+            elif start - self.clip_end > self.time_threshold:
+                self.clips.append([self.clip_start, self.clip_end])
+                self.clip_start = start
+            self.clip_end = end
+        elif self.clip_start >= 0:
+            self.clips.append([self.clip_start, self.clip_end])
+            self.clip_start = -1
 
     def hasData(self):
         return len(self.data) > 0
@@ -70,6 +82,12 @@ class Clip:
                 text = text + ",".join(it)
 
         return text
+
+    def getClips(self):
+        if self.clip_start >= 0:
+            self.clips.append([self.clip_start, self.clip_end])
+            self.clip_start = -1
+        return self.clips
 
     def getSummary(self):
         return sec2TimeStr(self.start) + "\t" + self.name + "\n"
@@ -103,15 +121,15 @@ class Ass:
         name_pos = -1
 
         #章节标号, 只实现两级章节
-        chapter = 1
-        chapter_ = 1
+        chapter_main = 1
+        chapter_sub = 1
 
         # 输出时的章节名称
-        chapter_name = str(chapter) + "." + str(chapter_)
+        chapter_name = str(chapter_main) + "." + str(chapter_sub)
 
         self.head = ""
-        self.clips = []
-        clip = None
+        self.chapters = []
+        chapter = None
 
         ass = open(ass_path, 'r', encoding='UTF-8')
         for i in ass:
@@ -127,32 +145,29 @@ class Ass:
                     if comment:
                         text = text.strip()
                         if text.startswith("##"):
-                            self.clips.append(clip)
-                            chapter_ += 1
+                            self.chapters.append(chapter)
+                            chapter_sub += 1
                             chapter_name = str(
-                                chapter) + "." + str(chapter_) + " " + text[2:].strip()
-                            clip = None
-                            content = ""
-
+                                chapter_main) + "." + str(chapter_sub) + " " + text[2:].strip()
+                            chapter = None
                         elif text.startswith("#"):
-                            self.clips.append(clip)
-                            chapter += 1
-                            chapter_ = 1
+                            self.chapters.append(chapter)
+                            chapter_main += 1
+                            chapter_sub = 1
                             chapter_name = str(
-                                chapter) + "." + str(chapter_) + " " + text[1:].strip()
-                            clip = None
-                            content = ""
+                                chapter_main) + "." + str(chapter_sub) + " " + text[1:].strip()
+                            chapter = None
                         elif remove_comment > 0:
                             continue
 
                         if remove_comment > 1:
                             continue
 
-                    if clip == None:
-                        clip = Clip(chapter_name, time_threshold,
-                                    start_pos, end_pos)
+                    if chapter == None:
+                        chapter = Chapter(chapter_name, time_threshold,
+                                          start_pos, end_pos)
 
-                    clip.add(l, comment, start, end, name)
+                    chapter.add(l, comment, start, end, name)
 
                     # l[start_pos] = sec2TimeStr(start - time_dif)
                     # l[end_pos] = sec2TimeStr(end - time_dif)
@@ -178,8 +193,8 @@ class Ass:
                     text_pos = pos.index("Text")
                     name_pos = pos.index("Name")
 
-        if clip.hasData():
-            self.clips.append(clip)
+        if chapter.hasData():
+            self.chapters.append(chapter)
 
     def split(self, name="", raw_time=False, cut_video=False):
         """切分字幕和视频
@@ -201,14 +216,19 @@ class Ass:
         print("content file: ", content_path)
         content_file = open(content_path, 'w', encoding='UTF-8')
 
-        for clip in self.clips:
-            path = dir + "/" + name + clip.name + ".ass"
+        for chapter in self.chapters:
+            path = dir + "/" + name + chapter.name + ".ass"
             print(path)
-            content_file.write(clip.getContent())
+            content_file.write(chapter.getSummary())
             file = open(path, 'w', encoding='UTF-8')
             file.write(self.head)
-            file.write(clip.getAss(raw_time))
+            file.write(chapter.getAss(raw_time))
             file.close()
 
+            if cut_video:
+                print(chapter.getClips())
+
         content_file.close()
+
+
 
