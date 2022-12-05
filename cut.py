@@ -34,11 +34,13 @@ class Chapter:
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.data = []
+        self.data2 = []
         self.start = -1
         self.clips = []
         self.clip_start = -1
         self.clip_end = -1
         # self.clip_end = -1
+        self.dut = 0
 
     def add(self, data, comment, start, end, name):
         """为片段添加一行字幕
@@ -56,13 +58,24 @@ class Chapter:
                 self.clip_start = start
                 if self.start < 0:
                     self.start = start
-            elif start - self.clip_end > self.time_threshold:
+            elif end < self.clip_end or start - self.clip_end > self.time_threshold:
+                self.dut += (self.clip_end-self.clip_start)
                 self.clips.append([self.clip_start, self.clip_end])
                 self.clip_start = start
             self.clip_end = end
+            data[self.start_pos] = sec2TimeStr(
+                start - self.clip_start + self.dut)
+            data[self.end_pos] = sec2TimeStr(end - self.clip_start + self.dut)
+            self.data2.append(data)
         elif self.clip_start >= 0:
+            self.dut += (self.clip_end-self.clip_start)
             self.clips.append([self.clip_start, self.clip_end])
             self.clip_start = -1
+        
+        if comment and (data[len(data)-1]).startswith("#"):
+            data[self.start_pos] = sec2TimeStr(self.dut)
+            data[self.end_pos] = sec2TimeStr(self.dut)
+            self.data2.append(data)
 
     def hasData(self):
         return len(self.data) > 0
@@ -73,14 +86,8 @@ class Chapter:
             for item in self.data:
                 text = text + ",".join(item)
         else:
-            for item in self.data:
-                it = item.copy()
-                it[self.start_pos] = sec2TimeStr(
-                    timeStr2Sec(it[self.start_pos]) - self.start)
-                it[self.end_pos] = sec2TimeStr(
-                    timeStr2Sec(it[self.end_pos]) - self.start)
-                text = text + ",".join(it)
-
+            for item in self.data2:
+                text = text + ",".join(item)
         return text
 
     def getClips(self):
@@ -100,7 +107,7 @@ class Ass:
         Args:
             ass_path (str): 字幕文件的路径
             video_path (str, optional): 视频文件的路径. Defaults to "".
-            remove_comment (int, optional): 是否删除comment; 0 不删除 1 保留章节信息 2 不保留. Defaults to 1.
+            remove_comment (int, optional): 是否删除comment; 0 不删除（只有输出原时间轴才有效） 1 保留章节信息 2 不保留. Defaults to 1.
             time_threshold (int, optional): 时间阈值;两个相邻字幕之间的间隔时间如果超过阈值，则进行裁剪. Defaults to 10.
         """
         remove_comment = int(remove_comment)
@@ -146,15 +153,17 @@ class Ass:
                     if comment:
                         text = text.strip()
                         if text.startswith("##"):
-                            self.chapters.append(chapter)
-                            chapter_sub += 1
+                            if chapter:
+                                self.chapters.append(chapter)
+                                chapter_sub += 1
                             chapter_name = str(
                                 chapter_main) + "." + str(chapter_sub) + " " + text[2:].strip()
                             chapter = None
                         elif text.startswith("#"):
-                            self.chapters.append(chapter)
-                            chapter_main += 1
-                            chapter_sub = 1
+                            if chapter:
+                                self.chapters.append(chapter)
+                                chapter_main += 1
+                                chapter_sub = 1
                             chapter_name = str(
                                 chapter_main) + "." + str(chapter_sub) + " " + text[1:].strip()
                             chapter = None
@@ -193,9 +202,9 @@ class Ass:
                     end_pos = pos.index("End")
                     text_pos = pos.index("Text")
                     name_pos = pos.index("Name")
-
-        if chapter.hasData():
-            self.chapters.append(chapter)
+        if chapter:
+            if chapter.hasData():
+                self.chapters.append(chapter)
 
     def split(self, name="", raw_time=False, cut_video=False, ref_content_text=""):
         """切分字幕和视频
@@ -247,6 +256,8 @@ class Ass:
         if write_content_file:
             result.append(content_path)
 
+        print("len(ref_content): ", len(ref_content))
+
         for chapter in self.chapters:
             if len(ref_content) > 0:
                 if sec2TimeStr(chapter.start) not in ref_content:
@@ -262,9 +273,9 @@ class Ass:
             file.write(self.head)
             file.write(chapter.getAss(raw_time))
             file.close()
-
             if cut_video:
                 time_clips = chapter.getClips()
+                print(time_clips)
                 videos = []
                 for time_clip in time_clips:
                     videos.append(editor.VideoFileClip(

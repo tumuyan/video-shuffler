@@ -13,8 +13,8 @@ def main():
     parser.add_argument("video", type=str, default="", help="Input video path")
     parser.add_argument("-n", "--name", type=str, default="",
                         help="prefix for output files")
-    parser.add_argument("-r", "--ref-context", type=str,
-                        default="", help="ref context file or str")
+    parser.add_argument("-r", "--ref-content", type=str,
+                        default="", help="ref content file or str")
 
     parser.add_argument(
         "-c",
@@ -49,7 +49,7 @@ def main():
     if (input_.endswith(".ass")):
         ass_obj = cut.Ass(args.input, args.video,
                           args.remove_comment, args.time_threshold)
-        return ass_obj.split(args.name, args.raw_time, args.cut_video)
+        return ass_obj.split(args.name, args.raw_time, args.cut_video, args.ref_content)
 
     else:
         print("To be continued")

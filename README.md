@@ -57,7 +57,7 @@ pip install moviepy
 2. 在命令行中输入类似`python main.py 其他参数`
 
 ```
-usage: main.py [-h] [-n NAME] [-r REF_CONTEXT] [-c {0,1,2}] [-t TIME_THRESHOLD] [-v | --cut-video | --no-cut-video]
+usage: main.py [-h] [-n NAME] [-r REF_CONTENT] [-c {0,1,2}] [-t TIME_THRESHOLD] [-v | --cut-video | --no-cut-video]
                [-rt | --raw-time | --no-raw-time]
                input video
 
@@ -69,9 +69,9 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -n NAME, --name NAME  suffix for output files
-  -r REF_CONTEXT, --ref-context REF_CONTEXT
-                        suffix for output files
+  -n NAME, --name NAME  prefix for output files
+  -r REF_CONTENT, --ref-content REF_CONTENT
+                        ref content file or str
   -c {0,1,2}, --remove-comment {0,1,2}
                         Level of remove comment
   -t TIME_THRESHOLD, --time-threshold TIME_THRESHOLD
@@ -80,7 +80,6 @@ optional arguments:
                         output videos
   -rt, --raw-time, --no-raw-time
                         output ass file with raw time
-
 ```
 
 ## 工作流说明
@@ -92,3 +91,28 @@ optional arguments:
 6. 使用洋片箱，把context文件作为ref context参数，对字幕和视频进行切分
 8. 把切分结果按照需要的顺序拖入剪映或者其他软件
 
+* 特别的，如果制作3-1，需要把同文件的后方某个位置的视频片段移动到前方，只需要直接使用文本编辑器把字幕剪切到前方即可；AegiSub可以按照修改后的时序进行预览；而洋片箱针对时隙大于阈值（time_threshold）的片段进行自动剪切。
+
+## 对ASS字幕格式的利用和扩充
+
+ASS字幕格式的主体内容的部分在Event字段
+```
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,# 开场白
+Dialogue: 0,0:00:02.76,0:00:03.56,Default,,0,0,0,,米娜桑
+Comment: 0,0:00:04.06,0:00:07.16,Default,,0,0,0,,本当に申し訳ない
+```
+
+目前主要在利用Format和Text部分的内容。Text，即字幕显示或者注释的主体文本。Format有两种值：
+- Dialogue，即普通字幕。
+- Comment，即注释。在播放视频时，注释的行的内容不会显示；在导入剪映时，注释的行会被自动删除。在洋片箱中，Comment有两种用法：
+  1. 把此行字幕标记为完全不需要的内容。其结果是，输出视频时，会跳过这段视频内容。但是因为Aegisub的字幕排序方式并没有format排序，所以为方便查看，最好同时使用layer标注并进行排序。
+  2. 用来标记章节信息。（此时Text的内容需要以`# `或`## `开头）其结果是，视频从此位置被截断，前后分别输出到不同文件中，并且文件名按照章节编号和内容进行命名。
+
+* 个人习惯：如果不便在洋片箱中进行处理的位置（比如不准备裁剪画面，但是需要处理音频），可以在字幕前方或者后方添加`---`，导入非编软件后再根据字幕内容对这个位置进行手工修剪。
+
+## 目前存在的问题
+1. 没有处理字幕时间的问题。如果存在字幕的时间有重叠，可能有问题。
+2. 虽然在解析字幕时做了一定的通用化处理，但是仍然只能保证完全视频Aegisub导出的ASS格式字幕。
+3. web UI虽然方便，但是开销增加了。
