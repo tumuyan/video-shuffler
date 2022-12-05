@@ -44,3 +44,23 @@ pip install moviepy
 有两种使用方式：
 1. 点击app.py，根据弹出的提示，在浏览器中输入类似 http://127.0.0.1:8090 的地址
 2. 在命令行中输入类似`python main.py 其他参数`
+
+```
+
+positional arguments:
+  input                 Input file path (ass or txt)
+  video                 Input video path
+  name                  suffix for output files
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c {0,1,2}, --remove-comment {0,1,2}
+                        Level of remove comment
+  -t TIME_THRESHOLD, --time-threshold TIME_THRESHOLD
+                        time threshold for ass
+  -v, --cut-video, --no-cut-video
+                        output videos
+  -r, --raw-time, --no-raw-time
+                        output ass file with raw time
+
+```

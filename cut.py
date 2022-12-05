@@ -103,6 +103,7 @@ class Ass:
             remove_comment (int, optional): 是否删除comment; 0 不删除 1 保留章节信息 2 不保留. Defaults to 1.
             time_threshold (int, optional): 时间阈值;两个相邻字幕之间的间隔时间如果超过阈值，则进行裁剪. Defaults to 10.
         """
+        remove_comment = int(remove_comment)
         self.ass_path = ass_path
         self.video_path = video_path
 
@@ -252,9 +253,3 @@ class Ass:
         content_file.close()
         return content, result
 
-
-# ass = Ass("C:/prg/video-shuffler/test/7月11日(4).ass","C:/prg/video-shuffler/test/7月11日(4).mp4",2)
-# ass.split("S1娘121" ,False,True)
-
-
-print(sys.argv)
