@@ -205,30 +205,56 @@ class Ass:
             cut_video (bool, optional): 是否切分视频. Defaults to False.
         """
         # dir = os.path.abspath(os.path.join(os.path.dirname(self.path),os.path.pardir))
-        dir = os.path.abspath(os.path.join(os.path.dirname(self.ass_path)))
+        # dir = os.path.abspath(os.path.join(os.path.dirname(self.ass_path)))
+        dir = self.ass_path[0:-4]
         if len(name) > 0:
             name = name+" "
 
         if len(self.video_path) < 5:
             cut_video = False
+        if cut_video:
+            dir = self.ass_path[0:-4]
+        os.makedirs(dir, exist_ok=True)
+        result = []
 
+        content = dir +"\n"
         content_path = dir + "/" + name + " content.txt"
         print("content file: ", content_path)
+        result.append(content_path)
         content_file = open(content_path, 'w', encoding='UTF-8')
 
         for chapter in self.chapters:
             path = dir + "/" + name + chapter.name + ".ass"
             print(path)
-            content_file.write(chapter.getSummary())
+            result.append(path)
+            summary = chapter.getSummary()
+            content += summary
+            content_file.write(summary)
             file = open(path, 'w', encoding='UTF-8')
             file.write(self.head)
             file.write(chapter.getAss(raw_time))
             file.close()
 
             if cut_video:
-                print(chapter.getClips())
+                time_clips = chapter.getClips()
+                videos = []
+                for time_clip in time_clips:
+                    videos.append(editor.VideoFileClip(
+                        self.video_path).subclip(time_clip[0], time_clip[1]))
+
+                fn = dir + "/" + name + chapter.name + ".mp4"
+                result.append(fn)
+                merged = editor.concatenate_videoclips(videos)
+                merged.write_videofile(
+                    fn  # , audio_codec="aac", bitrate=self.args.bitrate
+                )
 
         content_file.close()
+        return content, result
 
 
+# ass = Ass("C:/prg/video-shuffler/test/7月11日(4).ass","C:/prg/video-shuffler/test/7月11日(4).mp4",2)
+# ass.split("S1娘121" ,False,True)
 
+
+print(sys.argv)
