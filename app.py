@@ -26,9 +26,14 @@ def fn_cut_ass2(ass, video,  remove_comment, time_threshold, name):
     return ass_obj.split(name, False, False)
 
 
-def fn_cut_video(ass, video,  remove_comment, time_threshold, name):
+def fn_cut_video1(ass, video,  remove_comment, time_threshold, name):
     ass_obj = get_ass_obj(ass, video, remove_comment, time_threshold)
     return ass_obj.split(name, False, True)
+
+
+def fn_cut_video2(ass, video,  remove_comment, time_threshold, name, content):
+    ass_obj = get_ass_obj(ass, video, remove_comment, time_threshold)
+    return ass_obj.split(name, False, True, content)
 
 
 app = gr.Blocks()
@@ -49,18 +54,21 @@ with app:
                     with gr.Row():
                         cut_ass1 = gr.Button("只分割字幕(原时间轴)")
                         cut_ass2 = gr.Button("只分割字幕(新时间轴)")
-                        cut_video = gr.Button("分割字幕和视频")
+                        cut_video1 = gr.Button("分割字幕和视频")
 
                 with gr.Column():
                     video = gr.Video(label="input viedo")
                     files = gr.File(label="Files")
-                    output = gr.TextArea(label="output")
+                    content = gr.TextArea(label="content")
+                    cut_video2 = gr.Button("用目录分割字幕和视频")
 
             cut_ass1.click(fn=fn_cut_ass1, inputs=[
-                           ass, video,  remove_comment, time_threshold, name], outputs=[output, files])
+                           ass, video,  remove_comment, time_threshold, name], outputs=[content, files])
             cut_ass2.click(fn=fn_cut_ass2, inputs=[
-                           ass, video,  remove_comment, time_threshold, name], outputs=[output, files])
-            cut_video.click(fn=fn_cut_video, inputs=[
-                            ass, video,  remove_comment, time_threshold, name], outputs=[output, files])
+                           ass, video,  remove_comment, time_threshold, name], outputs=[content, files])
+            cut_video1.click(fn=fn_cut_video1, inputs=[
+                ass, video,  remove_comment, time_threshold, name], outputs=[content, files])
+            cut_video2.click(fn=fn_cut_video2, inputs=[
+                ass, video,  remove_comment, time_threshold, name, content], outputs=[content, files])
 
     app.launch()

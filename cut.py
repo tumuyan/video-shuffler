@@ -197,14 +197,37 @@ class Ass:
         if chapter.hasData():
             self.chapters.append(chapter)
 
-    def split(self, name="", raw_time=False, cut_video=False):
+    def split(self, name="", raw_time=False, cut_video=False, ref_content_text=""):
         """切分字幕和视频
 
         Args:
             name (str, optional): 切分后文件名的前缀. Defaults to "".
             raw_time (bool, optional): 使用原视频文件的时间戳. Defaults to False.
             cut_video (bool, optional): 是否切分视频. Defaults to False.
+            ref_content_text (str, optional): 文本文件或字符串；使用参考的目录切分（因为输出的视频片段变少了，速度会更快）. Defaults to "".
+
+        Returns:
+            str: 输出文件的文件夹，以及包含时间和章节信息的目录
+            list: 输出的文件列表
         """
+        write_content_file = True
+        ref_content = []
+        if len(ref_content_text) > 0:
+            if os.path.exists(ref_content_text):
+                ref_content_file = open(
+                    ref_content_text, 'r', encoding='UTF-8')
+                for line in ref_content_file:
+                    rows = line.split('\t', 2)
+                    ref_content.append(rows[0])
+
+                ref_content_file.close()
+                write_content_file = len(ref_content) > 0
+            else:
+                lines = ref_content_text.split("\n")
+                for line in lines:
+                    rows = line.split('\t', 2)
+                    ref_content.append(rows[0])
+
         # dir = os.path.abspath(os.path.join(os.path.dirname(self.path),os.path.pardir))
         # dir = os.path.abspath(os.path.join(os.path.dirname(self.ass_path)))
         dir = self.ass_path[0:-4]
@@ -221,16 +244,20 @@ class Ass:
         content = dir + "\n"
         content_path = dir + "/" + name + " content.txt"
         print("content file: ", content_path)
-        result.append(content_path)
-        content_file = open(content_path, 'w', encoding='UTF-8')
+        if write_content_file:
+            result.append(content_path)
 
         for chapter in self.chapters:
+            if len(ref_content) > 0:
+                if sec2TimeStr(chapter.start) not in ref_content:
+                    continue
+
             path = dir + "/" + name + chapter.name + ".ass"
             print(path)
             result.append(path)
             summary = chapter.getSummary()
             content += summary
-            content_file.write(summary)
+
             file = open(path, 'w', encoding='UTF-8')
             file.write(self.head)
             file.write(chapter.getAss(raw_time))
@@ -249,8 +276,10 @@ class Ass:
                 merged.write_videofile(
                     fn  # , audio_codec="aac", bitrate=self.args.bitrate
                 )
-
-        content_file.close()
+        if write_content_file:
+            content_file = open(content_path, 'w', encoding='UTF-8')
+            content_file.write(content)
+            content_file.close()
         filelist = open(result[0], 'w', encoding='UTF-8')
         filelist.write("\n".join(result))
         filelist.close()

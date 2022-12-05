@@ -9,9 +9,12 @@ def main():
     )
 
     parser.add_argument("input", type=str,
-                        help="Input file path (ass or txt)")
-    parser.add_argument("video", type=str,  help="Input video path")
-    parser.add_argument("name", type=str,  help=" suffix for output files")
+                        help="Input file path (ass format)")
+    parser.add_argument("video", type=str, default="", help="Input video path")
+    parser.add_argument("-n", "--name", type=str, default="",
+                        help=" suffix for output files")
+    parser.add_argument("-r", "--ref-context", type=str,
+                        default="", help=" suffix for output files")
 
     parser.add_argument(
         "-c",
@@ -34,7 +37,7 @@ def main():
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
-        "-r",
+        "-rt",
         "--raw-time",
         help="output ass file with raw time",
         action=argparse.BooleanOptionalAction,

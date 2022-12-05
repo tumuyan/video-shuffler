@@ -46,21 +46,28 @@ pip install moviepy
 2. 在命令行中输入类似`python main.py 其他参数`
 
 ```
+usage: main.py [-h] [-n NAME] [-r REF_CONTEXT] [-c {0,1,2}] [-t TIME_THRESHOLD] [-v | --cut-video | --no-cut-video]
+               [-rt | --raw-time | --no-raw-time]
+               input video
+
+Cut video to clips and shuffle them by ass file
 
 positional arguments:
-  input                 Input file path (ass or txt)
+  input                 Input file path (ass format)
   video                 Input video path
-  name                  suffix for output files
 
 optional arguments:
   -h, --help            show this help message and exit
+  -n NAME, --name NAME  suffix for output files
+  -r REF_CONTEXT, --ref-context REF_CONTEXT
+                        suffix for output files
   -c {0,1,2}, --remove-comment {0,1,2}
                         Level of remove comment
   -t TIME_THRESHOLD, --time-threshold TIME_THRESHOLD
                         time threshold for ass
   -v, --cut-video, --no-cut-video
                         output videos
-  -r, --raw-time, --no-raw-time
+  -rt, --raw-time, --no-raw-time
                         output ass file with raw time
 
 ```
