@@ -12,9 +12,9 @@ def main():
                         help="Input file path (ass format)")
     parser.add_argument("video", type=str, default="", help="Input video path")
     parser.add_argument("-n", "--name", type=str, default="",
-                        help=" suffix for output files")
+                        help="prefix for output files")
     parser.add_argument("-r", "--ref-context", type=str,
-                        default="", help=" suffix for output files")
+                        default="", help="ref context file or str")
 
     parser.add_argument(
         "-c",
