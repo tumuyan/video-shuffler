@@ -216,9 +216,9 @@ class Ass:
         if cut_video:
             dir = self.ass_path[0:-4]
         os.makedirs(dir, exist_ok=True)
-        result = []
+        result = [dir + "/" + name + " filelist.txt"]
 
-        content = dir +"\n"
+        content = dir + "\n"
         content_path = dir + "/" + name + " content.txt"
         print("content file: ", content_path)
         result.append(content_path)
@@ -251,5 +251,8 @@ class Ass:
                 )
 
         content_file.close()
-        return content, result
+        filelist = open(result[0], 'w', encoding='UTF-8')
+        filelist.write("\n".join(result))
+        filelist.close()
 
+        return content, result
