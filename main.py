@@ -1,5 +1,6 @@
 import argparse
 import cut
+import merge
 
 
 def main():
@@ -10,7 +11,8 @@ def main():
 
     parser.add_argument("input", type=str,
                         help="Input file path (ass format)")
-    parser.add_argument("video", type=str, default="", help="Input video path")
+    parser.add_argument("-i", "--input-video", type=str,
+                        default="", help="Input video path")
     parser.add_argument("-n", "--name", type=str, default="",
                         help="prefix for output files")
     parser.add_argument("-r", "--ref-content", type=str,
@@ -31,6 +33,13 @@ def main():
     )
 
     parser.add_argument(
+        "-m",
+        "--merge-video",
+        help="merge videos",
+        action=argparse.BooleanOptionalAction,
+    )
+
+    parser.add_argument(
         "-v",
         "--cut-video",
         help="output videos",
@@ -46,8 +55,12 @@ def main():
     args = parser.parse_args()
 
     input_ = args.input.lower()
+    if (input_.endswith(".txt")):
+        if (args.merge_video):
+            merge.merge_videos(args.input)
+
     if (input_.endswith(".ass")):
-        ass_obj = cut.Ass(args.input, args.video,
+        ass_obj = cut.Ass(args.input, args.input_video,
                           args.remove_comment, args.time_threshold)
         return ass_obj.split(args.name, args.raw_time, args.cut_video, args.ref_content)
 
