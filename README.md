@@ -35,7 +35,7 @@ Cut video to clips and shuffle them by ass file.
 - [x] 使用gradio制作UI
 - [ ] 自动识别字幕中每句分别属于哪个角色（目前试过的几个开源项目效果都还不够实用）
 - [ ] 快速切换字幕中是否包含“xxx:”
-- [ ] lrc和字幕的转换
+- [x] lrc和字幕的转换
 - [ ] 音频格式转换
 - [ ] 对录播弹幕浓度进行计算，和录音字幕合并输出到csv文件，通过excel色阶工具快速发现整场直播的热点时刻主播说了什么（可惜不能整合到Aegisub中）
 
@@ -57,28 +57,51 @@ pip install moviepy
 
 2. 在命令行中输入类似`python main.py 其他参数`
 
+示例1：分离字幕为多个片段（使用原视频的时间轴，用于预览字幕片段是否正确）
+`python main.py xxx.ass -rt`等同`python main.py xxx.ass -m cut -c 1 -t 10 -rt ` 
+
+
+示例2：切分视频和字幕为多个片段
+`python main.py xxx.ass -i "xxx.mp4" -v`
+
+示例3: 切分章节列表文件中的片段的视频和字幕
+`python main.py xxx.ass -v -r "xxxx content.txt"`
+
+示例4: 转换字幕列表文件中的字幕为lrc文件
+`python main.py xxx.ass -m lrc`  
+`python main.py "xxxx  filelist.txt" -m lrc`
+
+示例4：合并视频和字幕文件
+`python main.py "xxxx  filelist.txt" -v -m merge`
+
+
+完整参数列表：
+
 ```
-usage: main.py [-h] [-n NAME] [-r REF_CONTENT] [-c {0,1,2}] [-t TIME_THRESHOLD] [-v | --cut-video | --no-cut-video]
-               [-rt | --raw-time | --no-raw-time]
-               input video
+usage: main.py [-h] [-m {cut,merge,mergelrc,lrc}] [-n NAME] [-r REF_CONTENT] [-i INPUT_VIDEO]
+               [-v | --cut-video | --no-cut-video] [-c {0,1,2}] [-t TIME_THRESHOLD] [-rt | --raw-time | --no-raw-time]       
+               input
 
 Cut video to clips and shuffle them by ass file
 
 positional arguments:
   input                 Input file path (ass format)
-  video                 Input video path
 
 optional arguments:
   -h, --help            show this help message and exit
+  -m {cut,merge,mergelrc,lrc}, --mode {cut,merge,mergelrc,lrc}
+                        mode
   -n NAME, --name NAME  prefix for output files
   -r REF_CONTENT, --ref-content REF_CONTENT
                         ref content file or str
+  -i INPUT_VIDEO, --input-video INPUT_VIDEO
+                        Input video path
+  -v, --cut-video, --no-cut-video
+                        output videos
   -c {0,1,2}, --remove-comment {0,1,2}
                         Level of remove comment
   -t TIME_THRESHOLD, --time-threshold TIME_THRESHOLD
                         time threshold for ass
-  -v, --cut-video, --no-cut-video
-                        output videos
   -rt, --raw-time, --no-raw-time
                         output ass file with raw time
 ```
@@ -93,6 +116,7 @@ optional arguments:
 8. 把切分结果按照需要的顺序拖入剪映或者其他软件
 
 * 特别的，如果制作3-1，需要把同文件的后方某个位置的视频片段移动到前方，只需要直接使用文本编辑器把字幕剪切到前方即可；AegiSub可以按照修改后的时序进行预览；而洋片箱针对时隙大于阈值（time_threshold）的片段进行自动剪切。
+* 如果使用洋片箱对视频进行分段（但是不抛弃任何部分），可以插入章节注释，并把章节注释前后的时间戳改为相同的值
 
 ## 对ASS字幕格式的利用和扩充
 

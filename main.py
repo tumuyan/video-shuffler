@@ -3,20 +3,38 @@ import cut
 import merge
 
 
+modes = ["cut", "merge", "mergelrc", "lrc"]
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Cut video to clips and shuffle them by ass file",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
+    parser.add_argument(
+        "-m",
+        "--mode", help="mode",
+        choices=modes,
+        default="cut"
+    )
+
     parser.add_argument("input", type=str,
                         help="Input file path (ass format)")
-    parser.add_argument("-i", "--input-video", type=str,
-                        default="", help="Input video path")
     parser.add_argument("-n", "--name", type=str, default="",
                         help="prefix for output files")
     parser.add_argument("-r", "--ref-content", type=str,
                         default="", help="ref content file or str")
+
+    parser.add_argument("-i", "--input-video", type=str,
+                        default="", help="Input video path")
+
+    parser.add_argument(
+        "-v",
+        "--cut-video",
+        help="output videos",
+        action=argparse.BooleanOptionalAction,
+    )
 
     parser.add_argument(
         "-c",
@@ -33,19 +51,6 @@ def main():
     )
 
     parser.add_argument(
-        "-m",
-        "--merge-video",
-        help="merge videos",
-        action=argparse.BooleanOptionalAction,
-    )
-
-    parser.add_argument(
-        "-v",
-        "--cut-video",
-        help="output videos",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
         "-rt",
         "--raw-time",
         help="output ass file with raw time",
@@ -55,9 +60,17 @@ def main():
     args = parser.parse_args()
 
     input_ = args.input.lower()
+
+    if (args.mode == "lrc"):
+        merge.asslist2lrc(args.input)
+        return
+
     if (input_.endswith(".txt")):
-        if (args.merge_video):
+        if (args.mode == "merge"):
             merge.merge_videos(args.input)
+        elif (args.mode == "mergelrc"):
+            merge.merge_videos(args.input, True)
+        return
 
     if (input_.endswith(".ass")):
         ass_obj = cut.Ass(args.input, args.input_video,

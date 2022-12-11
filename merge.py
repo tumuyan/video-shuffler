@@ -7,7 +7,7 @@ import re
 
 
 class Ass2:
-    def __init__(self, ass_path, time_offset):
+    def __init__(self, ass_path, time_offset=0):
         """解析ASS字幕文件
 
         Args:
@@ -72,21 +72,29 @@ class Ass2:
     def getHead(self):
         return self.head
 
+    def getLrc(self, remove_comment=1):
+        return self.chapter.getLrc(remove_comment)
+
     def hasData(self):
         return self.chapter.hasData()
 
 
-def merge_videos(filelist, suffix=".mp4"):
+def merge_videos(filelist, output_lrc=False):
     if os.path.exists(filelist):
         videos = []
+        suffix = ".mp4"
         video_output_path = filelist[0:-4] + suffix
         ass_output_path = filelist[0:-4] + ".ass"
+        lrc_output_path = filelist[0:-4] + ".lrc"
         duration = 0
         filelist_file = open(
             filelist, 'r', encoding='UTF-8')
 
         ass_head = None
         ass_file = open(ass_output_path, "w", encoding='UTF-8')
+        lrc_file = None
+        if output_lrc:
+            lrc_file = open(lrc_output_path, "w", encoding='UTF-8')
 
         for l in filelist_file:
             # 去除换行
@@ -105,12 +113,38 @@ def merge_videos(filelist, suffix=".mp4"):
                         ass_head = ass.getHead()
                         ass_file.write(ass_head)
                     ass_file.write(ass.getAss())
+
+                    if output_lrc:
+                        lrc_file.write(ass.getLrc(1))
                 duration += clip.duration
 
         filelist_file.close()
         ass_file.close()
-        # merged = editor.concatenate_videoclips(videos)
-        # merged.write_videofile(video_output_path)
+        if output_lrc:
+            lrc_file.close()
+        merged = editor.concatenate_videoclips(videos)
+        merged.write_videofile(video_output_path)
 
 
-merge_videos("./test/7月11日/ filelist.txt", ".mp4")
+def ass2lrc(path):
+    if os.path.exists(path) and path.lower().endswith(".ass"):
+        lrc_output_path = path[0:-4] + ".lrc"
+        print("ass2lrc: ", lrc_output_path)
+        lrc_file = open(lrc_output_path, "w", encoding='UTF-8')
+        ass = Ass2(path)
+        if ass.hasData():
+            lrc_file.write(ass.getLrc(1))
+        lrc_file.close()
+
+
+def asslist2lrc(filelist):
+    if os.path.exists(filelist):
+        if filelist.lower().endswith("txt"):
+            filelist_file = open(
+                filelist, 'r', encoding='UTF-8')
+            for l in filelist_file:
+                ass2lrc(l.rstrip())
+        else:
+            return ass2lrc(filelist)
+
+# merge_videos("./test/7月11日/ filelist.txt",True)
