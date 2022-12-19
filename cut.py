@@ -4,6 +4,8 @@ from moviepy import editor
 import utils
 from chapter import Chapter
 
+video_suffixs = [".mp4",".mkv"]
+audio_suffixs = [".mp3",".wav",".aac"]
 
 class Ass:
     def __init__(self, ass_path, video_path="", remove_comment=1, time_threshold=10):
@@ -107,15 +109,15 @@ class Ass:
             if chapter.hasData():
                 self.chapters.append(chapter)
 
-    def split(self, name="", raw_time=False, cut_video=False, ref_content_text="", suffix=".mp4"):
+    def split(self, name="", raw_time=False, cut_media=False, ref_content_text="", suffix=video_suffixs[0]):
         """切分字幕和视频
 
         Args:
             name (str, optional): 切分后文件名的前缀. Defaults to "".
             raw_time (bool, optional): 使用原视频文件的时间戳. Defaults to False.
-            cut_video (bool, optional): 是否切分视频. Defaults to False.
+            cut_media (int, optional): 是否切分视频. Defaults to False.
             ref_content_text (str, optional): 文本文件或字符串；使用参考的目录切分（因为输出的视频片段变少了，速度会更快）. Defaults to "".
-
+            suffix (str, optional): 输出多媒体文件的后缀
         Returns:
             str: 输出文件的文件夹，以及包含时间和章节信息的目录
             list: 输出的文件列表
@@ -145,8 +147,8 @@ class Ass:
             name = name+" "
 
         if len(self.video_path) < 5:
-            cut_video = False
-        if cut_video:
+            cut_media = False
+        if cut_media:
             dir = self.ass_path[0:-4]
         os.makedirs(dir, exist_ok=True)
         result = [dir + "/" + name + " filelist.txt"]
@@ -158,6 +160,9 @@ class Ass:
             result.append(content_path)
 
         print("len(ref_content): ", len(ref_content))
+
+        cut_audio = suffix in audio_suffixs
+        cut_video = suffix in video_suffixs
 
         for chapter in self.chapters:
             if len(ref_content) > 0:
@@ -174,20 +179,30 @@ class Ass:
             file.write(self.head)
             file.write(chapter.getAss(raw_time))
             file.close()
-            if cut_video:
+            if cut_media:
                 time_clips = chapter.getClips()
                 print(time_clips)
-                videos = []
+                media_clips = []
                 for time_clip in time_clips:
-                    videos.append(editor.VideoFileClip(
-                        self.video_path).subclip(time_clip[0], time_clip[1]))
+                    if cut_video:
+                        media_clips.append(editor.VideoFileClip(
+                            self.video_path).subclip(time_clip[0], time_clip[1]))
+                    elif cut_audio:
+                        media_clips.append(editor.AudioFileClip(
+                            self.video_path).subclip(time_clip[0], time_clip[1]))
 
                 fn = dir + "/" + name + chapter.name + suffix
                 result.append(fn)
-                merged = editor.concatenate_videoclips(videos)
-                merged.write_videofile(
-                    fn  # , audio_codec="aac", bitrate=self.args.bitrate
-                )
+
+                if cut_video:
+                    merged = editor.concatenate_videoclips(media_clips)
+                    merged.write_videofile(
+                        fn  # , audio_codec="aac", bitrate=self.args.bitrate
+                    )
+                elif cut_audio:
+                    merged = editor.concatenate_audioclips(media_clips)
+                    merged.write_audiofile(fn)
+
         if write_content_file:
             content_file = open(content_path, 'w', encoding='UTF-8')
             content_file.write(content)

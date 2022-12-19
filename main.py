@@ -35,6 +35,12 @@ def main():
         help="output videos",
         action=argparse.BooleanOptionalAction,
     )
+    parser.add_argument(
+        "-a",
+        "--cut-audio",
+        help="output audio ( --cut-audio will override --cut-video )",
+        action=argparse.BooleanOptionalAction,
+    )
 
     parser.add_argument(
         "-c",
@@ -60,6 +66,7 @@ def main():
     args = parser.parse_args()
 
     input_ = args.input.lower()
+    cut_media = args.cut_video or args.cut_audio
 
     if (args.mode == "lrc"):
         merge.asslist2lrc(args.input)
@@ -75,7 +82,9 @@ def main():
     if (input_.endswith(".ass")):
         ass_obj = cut.Ass(args.input, args.input_video,
                           args.remove_comment, args.time_threshold)
-        return ass_obj.split(args.name, args.raw_time, args.cut_video, args.ref_content)
+        if args.cut_audio:
+            return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,".mp3")
+        return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content)
 
     else:
         print("To be continued")

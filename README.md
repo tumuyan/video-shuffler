@@ -55,24 +55,24 @@ pip install moviepy
 1. 点击app.py，根据弹出的提示，在浏览器中输入类似 http://127.0.0.1:8090 的地址
 ![](webui.png)
 
-2. 在命令行中输入类似`python main.py 其他参数`
+2. 在命令行中输入类似`python main.py 其他参数`  
 
-示例1：分离字幕为多个片段（使用原视频的时间轴，用于预览字幕片段是否正确）
-`python main.py xxx.ass -rt`等同`python main.py xxx.ass -m cut -c 1 -t 10 -rt ` 
+    示例1：分离字幕为多个片段（使用原视频的时间轴，用于预览字幕片段是否正确）  
+    `python main.py xxx.ass -rt`等同`python main.py xxx.ass -m cut -c 1 -t 10 -rt `  
 
 
-示例2：切分视频和字幕为多个片段
-`python main.py xxx.ass -i "xxx.mp4" -v`
+    示例2：切分视频和字幕为多个片段  
+    `python main.py xxx.ass -i "xxx.mp4" -v`  
 
-示例3: 切分章节列表文件中的片段的视频和字幕
-`python main.py xxx.ass -v -r "xxxx content.txt"`
+    示例3: 切分章节列表文件中的片段的视频和字幕  
+    `python main.py xxx.ass -i "xxx.mp4" -v -r "xxxx content.txt"`  
 
-示例4: 转换字幕列表文件中的字幕为lrc文件
-`python main.py xxx.ass -m lrc`  
-`python main.py "xxxx  filelist.txt" -m lrc`
+    示例4: 转换字幕列表文件中的字幕为lrc文件  
+    `python main.py xxx.ass -m lrc`  
+    `python main.py "xxxx  filelist.txt" -m lrc`  
 
-示例4：合并视频和字幕文件
-`python main.py "xxxx  filelist.txt" -v -m merge`
+    示例4：合并视频和字幕文件  
+    `python main.py "xxxx  filelist.txt" -v -m merge`  
 
 
 完整参数列表：
