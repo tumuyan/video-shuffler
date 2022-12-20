@@ -50,6 +50,12 @@ def main():
     )
 
     parser.add_argument(
+        "-b",
+        "--skip-blank-chapter-name", help="Not output chapters without chapter name",
+        action=argparse.BooleanOptionalAction,
+    )
+
+    parser.add_argument(
         "-t",
         "--time-threshold", help="time threshold for ass",
         type=int,
@@ -83,8 +89,8 @@ def main():
         ass_obj = cut.Ass(args.input, args.input_video,
                           args.remove_comment, args.time_threshold)
         if args.cut_audio:
-            return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,".mp3")
-        return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content)
+            return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,".mp3",args.skip_blank_chapter_name)
+        return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,args.skip_blank_chapter_name)
 
     else:
         print("To be continued")

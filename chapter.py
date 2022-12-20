@@ -129,3 +129,10 @@ class Chapter:
 
     def getSummary(self):
         return utils.sec2TimeStr(self.start) + "\t" + self.name + "\n"
+
+
+    def isBlankName(self):
+        name = self.name.split(" ",2)
+        if len(name) !=2:
+            return True
+        return len(name[1].replace(" ",""))==0

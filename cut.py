@@ -109,7 +109,7 @@ class Ass:
             if chapter.hasData():
                 self.chapters.append(chapter)
 
-    def split(self, name="", raw_time=False, cut_media=False, ref_content_text="", suffix=video_suffixs[0]):
+    def split(self, name="", raw_time=False, cut_media=False, ref_content_text="", suffix=video_suffixs[0],skip_blank_chapter_name=False):
         """切分字幕和视频
 
         Args:
@@ -167,6 +167,9 @@ class Ass:
         for chapter in self.chapters:
             if len(ref_content) > 0:
                 if utils.sec2TimeStr(chapter.start) not in ref_content:
+                    continue
+            if skip_blank_chapter_name:
+                if chapter.isBlankName():
                     continue
 
             path = dir + "/" + name + chapter.name + ".ass"
