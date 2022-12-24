@@ -51,35 +51,40 @@ pip install moviepy
 （注意Windows用户需要把ffmpeg添加到环境变量中）
 
 ## 使用
-有两种使用方式：
-1. 点击app.py，根据弹出的提示，在浏览器中输入类似 http://127.0.0.1:8090 的地址
+有3种使用方式：
+
+1. 在Aegisub中添加[脚本](https://github.com/tumuyan/video-shuffler-for-aegisub)，在Aegisub的GUI中进行操作
+
+2. 点击app.py，根据弹出的提示，在浏览器中输入类似 http://127.0.0.1:8090 的地址
 ![](webui.png)
 
-2. 在命令行中输入类似`python main.py 其他参数`  
+3. 在命令行中输入类似`python main.py 其他参数`  
 
     示例1：分离字幕为多个片段（使用原视频的时间轴，用于预览字幕片段是否正确）  
     `python main.py xxx.ass -rt`等同`python main.py xxx.ass -m cut -c 1 -t 10 -rt `  
 
-
-    示例2：切分视频和字幕为多个片段  
-    `python main.py xxx.ass -i "xxx.mp4" -v`  
+    示例2： 切分章节列表文件中的片段的视频和字幕,其中视频只处理音频（从而加快速度）  
+    `python main.py xxx.ass -i "xxx.mp4" -a -r "xxxx content.txt"`  
 
     示例3: 切分章节列表文件中的片段的视频和字幕  
     `python main.py xxx.ass -i "xxx.mp4" -v -r "xxxx content.txt"`  
 
-    示例4: 转换字幕列表文件中的字幕为lrc文件  
+    示例4: 切分视频和字幕为多个片段  
+    `python main.py xxx.ass -i "xxx.mp4" -v`  
+
+    示例5: 转换字幕列表文件中的字幕为lrc文件  
     `python main.py xxx.ass -m lrc`  
     `python main.py "xxxx  filelist.txt" -m lrc`  
 
-    示例4：合并视频和字幕文件  
-    `python main.py "xxxx  filelist.txt" -v -m merge`  
-
+    示例6：合并视频和字幕文件  
+    `python main.py "xxxx  filelist.txt" -v -m merge`   
 
 完整参数列表：
 
 ```
-usage: main.py [-h] [-m {cut,merge,mergelrc,lrc}] [-n NAME] [-r REF_CONTENT] [-i INPUT_VIDEO]
-               [-v | --cut-video | --no-cut-video] [-c {0,1,2}] [-t TIME_THRESHOLD] [-rt | --raw-time | --no-raw-time]       
+usage: main.py [-h] [-m {cut,merge,mergelrc,lrc}] [-n NAME] [-r REF_CONTENT] [-i INPUT_VIDEO] [-v | --cut-video | --no-cut-video]
+               [-a | --cut-audio | --no-cut-audio] [-c {0,1,2}] [-b | --skip-blank-chapter-name | --no-skip-blank-chapter-name]
+               [-t TIME_THRESHOLD] [-rt | --raw-time | --no-raw-time]
                input
 
 Cut video to clips and shuffle them by ass file
@@ -98,12 +103,17 @@ optional arguments:
                         Input video path
   -v, --cut-video, --no-cut-video
                         output videos
+  -a, --cut-audio, --no-cut-audio
+                        output audio ( --cut-audio will override --cut-video )
   -c {0,1,2}, --remove-comment {0,1,2}
                         Level of remove comment
+  -b, --skip-blank-chapter-name, --no-skip-blank-chapter-name
+                        Not output chapters without chapter name
   -t TIME_THRESHOLD, --time-threshold TIME_THRESHOLD
                         time threshold for ass
   -rt, --raw-time, --no-raw-time
                         output ass file with raw time
+
 ```
 
 ## 工作流说明

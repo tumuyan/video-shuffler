@@ -129,7 +129,7 @@ class Ass:
                 ref_content_file = open(
                     ref_content_text, 'r', encoding='UTF-8')
                 for line in ref_content_file:
-                    rows = line.split('\t', 2)
+                    rows = line.split('\t', 1)
                     ref_content.append(rows[0])
 
                 ref_content_file.close()
@@ -137,7 +137,7 @@ class Ass:
             else:
                 lines = ref_content_text.split("\n")
                 for line in lines:
-                    rows = line.split('\t', 2)
+                    rows = line.split('\t', 1)
                     ref_content.append(rows[0])
 
         # dir = os.path.abspath(os.path.join(os.path.dirname(self.path),os.path.pardir))

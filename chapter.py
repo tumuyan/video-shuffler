@@ -1,5 +1,5 @@
 import utils
-
+import re
 
 class Chapter:
     def __init__(self, name, time_threshold, start_pos, end_pos, time_offset=0):
@@ -14,7 +14,7 @@ class Chapter:
         """
         # 默认text处于data的末位，不重新解析，并且包含了换行符
 
-        print("time_offset:", time_offset)
+        # print("time_offset:", time_offset)
         self.name = name
         self.time_threshold = time_threshold
         self.start_pos = start_pos
@@ -111,14 +111,14 @@ class Chapter:
                     if remove_comment > 1 and not item[-1].startswith("#"):
                         continue
                 text = text + \
-                    utils.timeStr2LrcTime(item[self.start_pos]) + item[-1]
+                    utils.timeStr2LrcTime(item[self.start_pos]) + re.sub("{[^}]+}","", item[-1])
         else:
             for item in self.data2:
                 if remove_comment > 0 and item[0].startswith("Comment"):
                     if remove_comment > 1 and not item[-1].startswith("#"):
                         continue
                 text = text + \
-                    utils.timeStr2LrcTime(item[self.start_pos]) + item[-1]
+                    utils.timeStr2LrcTime(item[self.start_pos]) +  re.sub("{[^}]+}","", item[-1])
         return text
 
     def getClips(self):
@@ -132,7 +132,7 @@ class Chapter:
 
 
     def isBlankName(self):
-        name = self.name.split(" ",2)
+        name = self.name.split(" ",1)
         if len(name) !=2:
             return True
         return len(name[1].replace(" ",""))==0
