@@ -60,8 +60,11 @@ pip install moviepy
 
 3. 在命令行中输入类似`python main.py 其他参数`  
 
-    示例1：分离字幕为多个片段（使用原视频的时间轴，用于预览字幕片段是否正确）  
+    示例0：分离字幕为多个片段（使用原视频的时间轴，使用原视频+新字幕检查字幕片段是否正确）  
     `python main.py xxx.ass -rt`等同`python main.py xxx.ass -m cut -c 1 -t 10 -rt `  
+
+    示例1：分离字幕为多个片段（使用新的时间轴，简单检查字幕片段是否正确，实际意义不大）  
+    `python main.py xxx.ass`等同`python main.py xxx.ass -m cut -c 1 -t 10 `  
 
     示例2： 切分章节列表文件中的片段的视频和字幕,其中视频只处理音频（从而加快速度）  
     `python main.py xxx.ass -i "xxx.mp4" -a -r "xxxx content.txt"`  
@@ -82,9 +85,10 @@ pip install moviepy
 完整参数列表：
 
 ```
-usage: main.py [-h] [-m {cut,merge,mergelrc,lrc}] [-n NAME] [-r REF_CONTENT] [-i INPUT_VIDEO] [-v | --cut-video | --no-cut-video]
-               [-a | --cut-audio | --no-cut-audio] [-c {0,1,2}] [-b | --skip-blank-chapter-name | --no-skip-blank-chapter-name]
-               [-t TIME_THRESHOLD] [-rt | --raw-time | --no-raw-time]
+usage: main.py [-h] [-m {cut,merge,mergelrc,lrc}] [-n NAME] [-r REF_CONTENT] [-i INPUT_VIDEO]
+               [-v | --cut-video | --no-cut-video] [-a | --cut-audio | --no-cut-audio] [-c {0,1,2}]
+               [-b | --skip-blank-chapter-name | --no-skip-blank-chapter-name] [-t TIME_THRESHOLD]
+               [-rt | --raw-time | --no-raw-time] [-f {.mp4,.mkv,.mp3,.wav,.aac}]
                input
 
 Cut video to clips and shuffle them by ass file
@@ -113,6 +117,8 @@ optional arguments:
                         time threshold for ass
   -rt, --raw-time, --no-raw-time
                         output ass file with raw time
+  -f {.mp4,.mkv,.mp3,.wav,.aac}, --format {.mp4,.mkv,.mp3,.wav,.aac}
+                        format of output media file
 
 ```
 

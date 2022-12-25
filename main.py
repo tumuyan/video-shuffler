@@ -4,7 +4,7 @@ import merge
 
 
 modes = ["cut", "merge", "mergelrc", "lrc"]
-
+formats = cut.video_suffixs + cut.audio_suffixs
 
 def main():
     parser = argparse.ArgumentParser(
@@ -69,6 +69,14 @@ def main():
         action=argparse.BooleanOptionalAction,
     )
 
+    parser.add_argument(
+        "-f",
+        "--format",
+        help="format of output media file",
+        choices=formats,
+        default=formats[0]
+    )
+
     args = parser.parse_args()
 
     input_ = args.input.lower()
@@ -89,8 +97,10 @@ def main():
         ass_obj = cut.Ass(args.input, args.input_video,
                           args.remove_comment, args.time_threshold)
         if args.cut_audio:
-            return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,".mp3",args.skip_blank_chapter_name)
-        return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,args.skip_blank_chapter_name)
+            if args.format in cut.video_suffixs:
+                args.format = cut.audio_suffixs[0]
+            return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,  args.format, args.skip_blank_chapter_name)
+        return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content, args.format, args.skip_blank_chapter_name)
 
     else:
         print("To be continued")
