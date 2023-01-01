@@ -102,6 +102,8 @@ def main():
             return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content,  args.format, args.skip_blank_chapter_name)
         return ass_obj.split(args.name, args.raw_time, cut_media, args.ref_content, args.format, args.skip_blank_chapter_name)
 
+    elif input_.endswith(".srt"):
+        print("Error: input srt file, need ass file")
     else:
         print("To be continued")
 

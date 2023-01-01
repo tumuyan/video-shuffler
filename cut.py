@@ -75,11 +75,13 @@ class Ass:
                                 chapter_main) + "." + str(chapter_sub) + " " + text[1:].strip()
                             chapter = None
                         elif remove_comment > 0:
-                            chapter.commitClip()
+                            if chapter != None:
+                                chapter.commitClip()
                             continue
 
                         if remove_comment > 1:
-                            chapter.commitClip()
+                            if chapter != None:
+                                chapter.commitClip()
                             continue
 
                     if chapter == None:
