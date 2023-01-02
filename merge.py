@@ -135,16 +135,36 @@ def ass2lrc(path):
         if ass.hasData():
             lrc_file.write(ass.getLrc(1))
         lrc_file.close()
-
+        return lrc_output_path
 
 def asslist2lrc(filelist):
-    if os.path.exists(filelist):
-        if filelist.lower().endswith("txt"):
-            filelist_file = open(
-                filelist, 'r', encoding='UTF-8')
-            for l in filelist_file:
-                ass2lrc(l.rstrip())
-        else:
-            return ass2lrc(filelist)
+    """把每个ass字幕文件转换为lrc
+
+    Args:
+        filelist (list, str): 一个文件路径列表，或者一个包含文件列表的txt文件的路径
+
+    Returns:
+        list: lrc文件列表
+    """
+    result = []
+    if type(filelist) == str:
+        if os.path.exists(filelist):
+            if filelist.lower().endswith("txt"):
+                filelist_file = open(
+                    filelist, 'r', encoding='UTF-8')
+                for l in filelist_file:
+                    result.append(ass2lrc(l.rstrip()))
+            else:
+                # 仅兜底
+                result.append(ass2lrc(filelist))
+    elif type(filelist) == list:
+        for path in filelist:
+            if os.path.exists(path):
+                result.append(ass2lrc(path))
+
+
+    else:
+        print("Err: asslist2lrc() filelist not str ")
+    return result
 
 # merge_videos("./test/7月11日/ filelist.txt",True)
