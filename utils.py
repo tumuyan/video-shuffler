@@ -25,3 +25,11 @@ def timeStr2LrcTime(string):
     if length > 2:
         m = m + int(strs[-3])*60
     return "[{}:{}]".format(m, strs[-1])
+
+# cue的时间格式为 分：秒：帧 一秒钟的音乐包含75个帧，数字从零开始，到74为止
+def time2CueTime(sec):
+    s = sec % 60
+    m = int(sec // 60)
+    f = int( s%1 * 75) 
+    s = int(s)
+    return "{}:{}:{}".format(m, s, f)

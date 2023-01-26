@@ -3,12 +3,14 @@ import re
 from moviepy import editor
 import utils
 from chapter import Chapter
+import time
 
 video_suffixs = [".mp4",".mkv"]
-audio_suffixs = [".mp3",".wav",".aac"]
+audio_suffixs = [".mp3",".wav",".ogg"]
+
 
 class Ass:
-    def __init__(self, ass_path, video_path="", remove_comment=1, time_threshold=10):
+    def __init__(self, ass_path, video_path="", remove_comment=1, time_threshold=2000):
         """解析ASS字幕文件
 
         Args:
@@ -125,6 +127,8 @@ class Ass:
             list: 输出的文件列表
         """
         write_content_file = True
+
+
         ref_content = []
         if len(ref_content_text) > 0:
             if os.path.exists(ref_content_text):
@@ -148,11 +152,21 @@ class Ass:
         if len(name) > 0:
             name = name+" "
 
+        # media_file_name = os.path.basename(self.video_path).split('.',2)[-1]
+
+        if len(self.video_path)>0:
+            media_file_name =re.sub(r'^.*[/\\]','',self.video_path)
+        else:
+            media_file_name =re.sub(r'^.*[/\\]','',self.ass_path)
+        project_name = media_file_name.split('.',2)[0]
+
         if len(self.video_path) < 5:
             cut_media = False
         if cut_media:
             dir = self.ass_path[0:-4]
         os.makedirs(dir, exist_ok=True)
+
+        print("path=",self.video_path,"\nmedia_file_name=",media_file_name,"\nproject_name=",project_name)
         result = [dir + "/" + name + " filelist.txt"]
 
         content = dir + "\n"
@@ -163,8 +177,36 @@ class Ass:
 
         print("len(ref_content): ", len(ref_content))
 
+
+        
+        date_now = time.strftime("%Y-%m-%d", time.localtime()) 
+        # 是否写入cue文件
+        write_cue_file = True
+        cue = """
+PERFORMER "{author}"
+TITLE "{title}"
+REM DATE {date}
+FILE "{file}" WAVE
+        """.format(author = "",title =project_name,date=date_now,file = media_file_name )
+        # print("cue head:",cue)
+        cue_progress = 0
+        cue_track = 1
+
         cut_audio = suffix in audio_suffixs
         cut_video = suffix in video_suffixs
+
+        media_length = 0
+        if (cut_media) :
+            if (not (cut_audio or cut_video)):
+                print("fix output suffix {a} -> {b}".format(a=suffix,b=audio_suffixs[0]))
+                cut_audio = True
+                suffix = audio_suffixs[0]
+            if cut_video:
+                input_file =  editor.VideoFileClip(self.video_path)
+                media_length = input_file.duration
+            elif cut_audio:
+                input_file =  editor.AudioFileClip(self.video_path)
+                media_length = input_file.duration
 
         for chapter in self.chapters:
             if len(ref_content) > 0:
@@ -184,29 +226,38 @@ class Ass:
             file.write(self.head)
             file.write(chapter.getAss(raw_time))
             file.close()
+
+            if write_cue_file:
+                t,cue_progress,cue_track = chapter.getCue(cue_progress, len(ref_content)<1,cue_track)
+                cue = cue + t
+
             if cut_media:
                 time_clips = chapter.getClips()
-                print(time_clips)
+                print("time_clips:",time_clips)
                 media_clips = []
                 for time_clip in time_clips:
-                    if cut_video:
-                        media_clips.append(editor.VideoFileClip(
-                            self.video_path).subclip(time_clip[0], time_clip[1]))
-                    elif cut_audio:
-                        media_clips.append(editor.AudioFileClip(
-                            self.video_path).subclip(time_clip[0], time_clip[1]))
+                    t0 = min(time_clip[0],media_length)
+                    t1 = min(time_clip[1],media_length)
+                    if t1>t0:
+                        if cut_video:
+                            media_clips.append(editor.VideoFileClip(
+                                self.video_path).subclip(t0, t1))
+                        elif cut_audio:
+                            media_clips.append(editor.AudioFileClip(
+                                self.video_path).subclip(t0, t1))
 
                 fn = dir + "/" + name + chapter.name + suffix
                 result.append(fn)
 
-                if cut_video:
-                    merged = editor.concatenate_videoclips(media_clips)
-                    merged.write_videofile(
-                        fn  # , audio_codec="aac", bitrate=self.args.bitrate
-                    )
-                elif cut_audio:
-                    merged = editor.concatenate_audioclips(media_clips)
-                    merged.write_audiofile(fn)
+                if len(media_clips)>0:
+                    if cut_video:
+                        merged = editor.concatenate_videoclips(media_clips)
+                        merged.write_videofile(
+                            fn  # , audio_codec="aac", bitrate=self.args.bitrate
+                        )
+                    elif cut_audio:
+                        merged = editor.concatenate_audioclips(media_clips)
+                        merged.write_audiofile(fn, bitrate="1000k")
 
         if write_content_file:
             content_file = open(content_path, 'w', encoding='UTF-8')
@@ -215,5 +266,9 @@ class Ass:
         filelist = open(result[0], 'w', encoding='UTF-8')
         filelist.write("\n".join(result))
         filelist.close()
+
+        cuefile = open( dir + "/" + name + ".cue", 'w', encoding='UTF-8')
+        cuefile.write(cue)
+        cuefile.close()
 
         return content, result

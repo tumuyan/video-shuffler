@@ -1,6 +1,7 @@
 import utils
 import re
 
+
 class Chapter:
     def __init__(self, name, time_threshold, start_pos, end_pos, time_offset=0):
         """存储一个剪辑片段
@@ -28,6 +29,7 @@ class Chapter:
         self.clip_end = -1
         # self.clip_end = -1
         self.dut = 0
+        self.actor = []
 
     def commitClip(self):
         """仅保存当前编辑中的片段(当需要插入的内容为注释，且不需要保存时)
@@ -37,7 +39,7 @@ class Chapter:
             self.clips.append([self.clip_start, self.clip_end])
             self.clip_start = -1
 
-    def add(self, data, comment,  start, end, name):
+    def add(self, data, comment,  start, end, actor):
         """为片段添加一行字幕
 
         Args:
@@ -45,7 +47,7 @@ class Chapter:
             comment (bool): 是否为注释
             start (int): 字幕的开始时间
             end (int): 字幕的结束时间
-            name (str): 说话人
+            actor (str): 说话人
             skip (bool): 实际不插入内容（当使用一行内容）
         """
         # print(data)
@@ -53,6 +55,9 @@ class Chapter:
         lenth = len(data)
         if lenth < 2:
             return
+
+        if actor not in self.actor:
+            self.actor.append(actor)
 
         if self.time_offset != 0:
             data[self.start_pos] = utils.sec2TimeStr(start + self.time_offset)
@@ -111,15 +116,53 @@ class Chapter:
                     if remove_comment > 1 and not item[-1].startswith("#"):
                         continue
                 text = text + \
-                    utils.timeStr2LrcTime(item[self.start_pos]) + re.sub("{[^}]+}","", item[-1])
+                    utils.timeStr2LrcTime(
+                        item[self.start_pos]) + re.sub("{[^}]+}", "", item[-1])
         else:
             for item in self.data2:
                 if remove_comment > 0 and item[0].startswith("Comment"):
                     if remove_comment > 1 and not item[-1].startswith("#"):
                         continue
                 text = text + \
-                    utils.timeStr2LrcTime(item[self.start_pos]) +  re.sub("{[^}]+}","", item[-1])
+                    utils.timeStr2LrcTime(
+                        item[self.start_pos]) + re.sub("{[^}]+}", "", item[-1])
         return text
+
+    def getCue(self, position=0, index0=True, track=1):
+
+        if len(self.clips) < 1:
+            return "", position, track
+        else:
+            title = self.name.split(" ", 2)[-1]
+            clip0 = self.clips[0]
+            clip1 = self.clips[-1]
+            time0 = clip0[0]
+            time1 = clip1[1]
+            cue = ""
+#             cue = """
+#   TRACK {track} AUDIO
+#     TITLE "{title}"
+#     PERFORMER "{author}" """.format(title=title, author=", ".join(self.actor), track=track)
+
+            if time0 - position > 0.1 and not index0:
+                cue = """
+  TRACK {track} AUDIO
+    TITLE "{title}"
+    PERFORMER "{author}"
+    INDEX 01 {time}""".format(title="", author="", time=utils.time2CueTime(position), track=track)
+                track = track+1
+            cue = cue + """
+  TRACK {track} AUDIO
+    TITLE "{title}"
+    PERFORMER "{author}"
+    INDEX 01 {time}""".format(title=title, author=", ".join(self.actor), time=utils.time2CueTime(time0), track=track)
+
+            if time0 - position > 0.1 and index0:
+                cue = cue + \
+                    "\n    INDEX 00 {time}".format(
+                        time=utils.time2CueTime(position))
+
+        return cue, time1, track+1
 
     def getClips(self):
         if self.clip_start >= 0:
@@ -130,9 +173,8 @@ class Chapter:
     def getSummary(self):
         return utils.sec2TimeStr(self.start) + "\t" + self.name + "\n"
 
-
     def isBlankName(self):
-        name = self.name.split(" ",1)
-        if len(name) !=2:
+        name = self.name.split(" ", 1)
+        if len(name) != 2:
             return True
-        return len(name[1].replace(" ",""))==0
+        return len(name[1].replace(" ", "")) == 0
